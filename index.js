@@ -1,14 +1,16 @@
 const sets = {};
 
-function evaluate(expression) {
-  const comma = /(?<!\\),/;
-  let elements;
-  if (comma.test(expression)) {
-    elements = expression.split(comma);
+function split(expression) {
+  if (expression.includes(",")) {
+    elements = expression.split(",");
   } else {
     elements = expression.split(/\s+/);
   }
-  elements = elements.map((element) => element.replaceAll("\\,", ",").trim());
+  return elements.map((element) => element.trim());
+}
+
+function evaluate(expression) {
+  let elements = split(expression)
   for (let i in elements) {
     if (elements[i].startsWith("$")) {
       elements[i] = sets[elements[i].slice(1)];
@@ -16,8 +18,6 @@ function evaluate(expression) {
   }
   return new Set(elements.filter(Boolean));
 }
-
-
 
 function getAssignment(line) {
   let assignment = line.match(/^([^:]+):\s*(.*)\s*$/);
@@ -46,7 +46,7 @@ function setToString(set) {
       elements.push(element);
     }
   }
-  return "{" + elements.join(", ") + "}";
+  return "{ " + elements.join(", ") + " }";
 }
 
 function printSets() {
