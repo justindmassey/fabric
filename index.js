@@ -1,6 +1,7 @@
 const sets = {};
 
 function split(expression) {
+  let elements;
   if (expression.includes(",")) {
     elements = expression.split(",");
   } else {
