@@ -34,6 +34,8 @@ function online(line) {
   if (assignment) {
     sets[assignment.name] = evaluate(assignment.expression);
     printSets();
+  } else {
+    console.log(setToString(evaluate(line)))
   }
 }
 
@@ -55,4 +57,4 @@ function printSets() {
   }
 }
 
-require("./lib/rl")("{} ", online);
+require("./lib/rl")("\x1b[36m{}\x1b[0m ", online);
