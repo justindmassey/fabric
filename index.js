@@ -23,7 +23,7 @@ function split(expression) {
 
 function evaluate(expression) {
   expression = expression.replaceAll("{", " ").replaceAll("}", " ");
-  let operation = expression.match(/^(.*?)\s*([+\-&])\s*(.*)$/);
+  let operation = expression.match(/^(.*?)\s*([+\-&|])\s*(.*)$/);
   if (operation) {
     let left = evaluate(operation[1]);
     let operator = operation[2];
@@ -36,6 +36,9 @@ function evaluate(expression) {
     }
     if (operator == "-") {
       return getSet(left.difference(right));
+    }
+    if (operator == "|") {
+      return getSet(left.symmetricDifference(right));
     }
   }
   let elements = split(expression);
