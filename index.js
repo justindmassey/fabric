@@ -11,13 +11,38 @@ function split(expression) {
 }
 
 function evaluate(expression) {
-  let elements = split(expression);
-  for (let i in elements) {
-    if (elements[i].startsWith("$")) {
-      elements[i] = sets[elements[i].slice(1)];
+  let operation = expression.match(/^(.+?)\s*([+\-&])\s*(.+)$/);
+  if (operation) {
+    let left = evaluate(operation[1]);
+    let operator = operation[2];
+    let right = evaluate(operation[3]);
+    if (operator == "+") {
+      return left.union(right);
+    }
+    if (operator == "&") {
+      return left.intersection(right);
+    }
+    if (operator == "-") {
+      return left.difference(right);
     }
   }
-  return new Set(elements.filter(Boolean));
+  let elements = split(expression);
+  let result = [];
+  for (let element of elements) {
+    if (element.startsWith("$$")) {
+      let set = sets[element.slice(2)];
+      if (set) {
+        for (let elem of set) {
+          result.push(elem);
+        }
+      }
+    } else if (element.startsWith("$")) {
+      result.push(sets[element.slice(1)]);
+    } else {
+      result.push(element);
+    }
+  }
+  return new Set(result.filter(Boolean));
 }
 
 function getAssignment(line) {
