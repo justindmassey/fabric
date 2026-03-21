@@ -43,24 +43,25 @@ function evaluate(expression) {
     if (operator == "*") {
       return cartesianProduct(left, right);
     }
-  }
-  let elements = split(expression);
-  let result = [];
-  for (let element of elements) {
-    if (element.startsWith("$$")) {
-      let set = sets[element.slice(2)];
-      if (set) {
-        for (let elem of set) {
-          result.push(elem);
+  } else {
+    let elements = split(expression);
+    let result = [];
+    for (let element of elements) {
+      if (element.startsWith("$$")) {
+        let set = sets[element.slice(2)];
+        if (set) {
+          for (let elem of set) {
+            result.push(elem);
+          }
         }
+      } else if (element.startsWith("$")) {
+        result.push(sets[element.slice(1)]);
+      } else {
+        result.push(element);
       }
-    } else if (element.startsWith("$")) {
-      result.push(sets[element.slice(1)]);
-    } else {
-      result.push(element);
     }
+    return getSet(new Set(result.filter(Boolean)));
   }
-  return getSet(new Set(result.filter(Boolean)));
 }
 
 function cartesianProduct(left, right) {
