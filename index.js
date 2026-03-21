@@ -117,7 +117,7 @@ function setToString(set) {
 }
 
 function printSets() {
-  for (let name in sets) {
+  for (let name of Object.keys(sets).sort()) {
     console.log(name + " = " + setToString(sets[name]));
   }
 }
