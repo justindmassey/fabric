@@ -11,7 +11,7 @@ function split(expression) {
 }
 
 function evaluate(expression) {
-  let operation = expression.match(/^(.+?)\s*([+\-&])\s*(.+)$/);
+  let operation = expression.match(/^(.*?)\s*([+\-&])\s*(.*)$/);
   if (operation) {
     let left = evaluate(operation[1]);
     let operator = operation[2];
