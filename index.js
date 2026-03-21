@@ -87,18 +87,20 @@ function getAssignment(line) {
 }
 
 function online(line) {
-  let removal = line.match(/^!(.*)/);
-  if (removal) {
-    delete sets[removal[1].trim()];
-    printSets();
-    return;
-  }
-  let assignment = getAssignment(line);
-  if (assignment) {
-    sets[assignment.name] = evaluate(assignment.expression);
+  if (!line) {
     printSets();
   } else {
-    console.log(setToString(evaluate(line)));
+    let removal = line.match(/^!(.*)/);
+    if (removal) {
+      delete sets[removal[1].trim()];
+    } else {
+      let assignment = getAssignment(line);
+      if (assignment) {
+        sets[assignment.name] = evaluate(assignment.expression);
+      } else {
+        console.log(setToString(evaluate(line)));
+      }
+    }
   }
 }
 
