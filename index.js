@@ -34,6 +34,12 @@ function getAssignment(line) {
 }
 
 function online(line) {
+  let removal = line.match(/!(.*)/);
+  if (removal) {
+    delete sets[removal[1].trim()];
+    printSets();
+    return;
+  }
   let assignment = getAssignment(line);
   if (assignment) {
     sets[assignment.name] = evaluate(assignment.expression);
