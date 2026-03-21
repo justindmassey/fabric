@@ -1,4 +1,15 @@
 const sets = Object.create(null);
+const canonSets = {};
+
+function getSet(set) {
+  let canon = setToString(set);
+  if (canon in canonSets) {
+    return canonSets[canon];
+  } else {
+    canonSets[canon] = set;
+    return set;
+  }
+}
 
 function split(expression) {
   let elements;
@@ -11,19 +22,20 @@ function split(expression) {
 }
 
 function evaluate(expression) {
+  expression = expression.replaceAll("{", " ").replaceAll("}", " ");
   let operation = expression.match(/^(.*?)\s*([+\-&])\s*(.*)$/);
   if (operation) {
     let left = evaluate(operation[1]);
     let operator = operation[2];
     let right = evaluate(operation[3]);
     if (operator == "+") {
-      return left.union(right);
+      return getSet(left.union(right));
     }
     if (operator == "&") {
-      return left.intersection(right);
+      return getSet(left.intersection(right));
     }
     if (operator == "-") {
-      return left.difference(right);
+      return getSet(left.difference(right));
     }
   }
   let elements = split(expression);
@@ -42,7 +54,7 @@ function evaluate(expression) {
       result.push(element);
     }
   }
-  return new Set(result.filter(Boolean));
+  return getSet(new Set(result.filter(Boolean)));
 }
 
 function getAssignment(line) {
@@ -59,7 +71,7 @@ function getAssignment(line) {
 }
 
 function online(line) {
-  let removal = line.match(/!(.*)/);
+  let removal = line.match(/^!(.*)/);
   if (removal) {
     delete sets[removal[1].trim()];
     printSets();
@@ -83,7 +95,7 @@ function setToString(set) {
       elements.push(element);
     }
   }
-  return "{ " + elements.join(", ") + " }";
+  return "{ " + elements.sort().join(", ") + " }";
 }
 
 function printSets() {
