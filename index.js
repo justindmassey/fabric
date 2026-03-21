@@ -1,4 +1,4 @@
-const sets = {};
+const sets = Object.create(null);
 
 function split(expression) {
   let elements;
