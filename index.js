@@ -23,7 +23,7 @@ function split(expression) {
 
 function evaluate(expression) {
   expression = expression.replaceAll("{", " ").replaceAll("}", " ");
-  let operation = expression.match(/^(.*?)\s*([+\-&|])\s*(.*)$/);
+  let operation = expression.match(/^(.*?)\s*([+\-&|*])\s*(.*)$/);
   if (operation) {
     let left = evaluate(operation[1]);
     let operator = operation[2];
@@ -39,6 +39,9 @@ function evaluate(expression) {
     }
     if (operator == "|") {
       return getSet(left.symmetricDifference(right));
+    }
+    if (operator == "*") {
+      return cartesianProduct(left, right);
     }
   }
   let elements = split(expression);
@@ -58,6 +61,16 @@ function evaluate(expression) {
     }
   }
   return getSet(new Set(result.filter(Boolean)));
+}
+
+function cartesianProduct(left, right) {
+  let result = [];
+  for (let a of left) {
+    for (let b of right) {
+      result.push(getSet(new Set([a, b])));
+    }
+  }
+  return getSet(new Set(result));
 }
 
 function getAssignment(line) {
