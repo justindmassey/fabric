@@ -10,7 +10,7 @@ function split(expression) {
 }
 
 function evaluate(expression) {
-  let elements = split(expression)
+  let elements = split(expression);
   for (let i in elements) {
     if (elements[i].startsWith("$")) {
       elements[i] = sets[elements[i].slice(1)];
@@ -22,10 +22,13 @@ function evaluate(expression) {
 function getAssignment(line) {
   let assignment = line.match(/^([^:]+):\s*(.*)\s*$/);
   if (assignment) {
-    return {
-      name: assignment[1],
-      expression: assignment[2],
-    };
+    let name = assignment[1].trim();
+    if (name) {
+      return {
+        name: name,
+        expression: assignment[2],
+      };
+    }
   }
 }
 
@@ -35,7 +38,7 @@ function online(line) {
     sets[assignment.name] = evaluate(assignment.expression);
     printSets();
   } else {
-    console.log(setToString(evaluate(line)))
+    console.log(setToString(evaluate(line)));
   }
 }
 
