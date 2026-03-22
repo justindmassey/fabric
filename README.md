@@ -15,61 +15,60 @@ fabric is a small language for set algebra.
 
 ---
 
-## quick example
+## usage
 
+Run:
+
+```bash
+node fabric.js
 ```
-A: a b c
-B: c d
 
-$$A + $$B
-{ a, b, c, d }
+You’ll see:
 
-$$A & $$B
-{ c }
-
-C: { $$A + $$B } x
-
-<empty line>
-
-A = { a, b, c }
-B = { c, d }
-C = { { a, b, c, d }, x }
+```text
+{}
 ```
 
 ---
 
-## formatting
+## assignment
 
-fabric formats sets automatically:
+Use `name: expression` to assign a set.
 
-* **inline** if the result fits within ~80 characters
-* **multiline** otherwise
-
-Example (small):
-
+```text
+A: a b c
+B: c d
 ```
+
+Result:
+
+```text
+A = { a, b, c }
+B = { c, d }
+```
+
+---
+
+## deletion
+
+```text
+!A
+```
+
+---
+
+## evaluation
+
+Any non-empty line that is not an assignment or deletion is evaluated:
+
+```text
+a b + b c
+```
+
+→
+
+```text
 { a, b, c }
-```
-
-Example (larger):
-
-```
-{
-  a,
-  b,
-  c,
-  d,
-  e,
-  f,
-  g,
-  h
-}
-```
-
-Nested sets expand only when needed:
-
-```
-{ { a, b }, { c, d } }
 ```
 
 ---
@@ -78,7 +77,7 @@ Nested sets expand only when needed:
 
 There are three levels:
 
-```
+```text
 A     → the atom "A"
 $A    → the set A as one element
 $$A   → the elements of A
@@ -86,13 +85,27 @@ $$A   → the elements of A
 
 Example:
 
-```
+```text
 A: a b
+```
 
+```text
 $A
-{ { a, b } }
+```
 
+→
+
+```text
+{ { a, b } }
+```
+
+```text
 $$A
+```
+
+→
+
+```text
 { a, b }
 ```
 
@@ -100,7 +113,7 @@ $$A
 
 ## operators
 
-```
+```text
 +   union
 &   intersection
 -   difference
@@ -110,25 +123,43 @@ $$A
 
 ---
 
+## operator examples
+
+```text
+a b + b c
+→ { a, b, c }
+
+a b & b c
+→ { b }
+
+a b c - b c
+→ { a }
+
+a b c | b c d
+→ { a, d }
+```
+
+---
+
 ## cartesian product
 
-The product operator `*` produces **ordered pairs encoded as sets**.
+The product operator `*` produces ordered pairs encoded as sets.
 
 Each pair `(a, b)` is represented as:
 
-```
+```text
 { { a }, { a, b } }
 ```
 
 Example:
 
-```
+```text
 a b * x y
 ```
 
-Result:
+→
 
-```
+```text
 {
   { { a }, { a, x } },
   { { a }, { a, y } },
@@ -137,7 +168,28 @@ Result:
 }
 ```
 
-This encoding preserves order using only sets.
+---
+
+## using named sets
+
+```text
+A: a b c
+B: c d
+```
+
+```text
+$$A + $$B
+→ { a, b, c, d }
+
+$$A & $$B
+→ { c }
+
+$$A - $$B
+→ { a, b }
+
+$$A | $$B
+→ { a, b, d }
+```
 
 ---
 
@@ -147,13 +199,13 @@ Braces do two things.
 
 ### nested sets
 
-```
+```text
 X: { a b } c
 ```
 
-Result:
+→
 
-```
+```text
 X = { { a, b }, c }
 ```
 
@@ -161,13 +213,13 @@ X = { { a, b }, c }
 
 ### grouping
 
-```
+```text
 { a b + b c } & b c
 ```
 
-Result:
+→
 
-```
+```text
 { b, c }
 ```
 
@@ -179,52 +231,45 @@ fabric has two modes.
 
 ### whitespace mode
 
-```
+```text
 a b c
+→ { a, b, c }
 ```
-
-→ `{ a, b, c }`
 
 ---
 
-### comma mode (for multi-word atoms)
+### comma mode
 
-```
+```text
 red apple, green pear
+→ { red apple, green pear }
 ```
-
-→ `{ red apple, green pear }`
 
 ---
 
 ### braces also separate elements
 
-```
+```text
 { a b }c
-```
+→ { { a, b }, c }
 
-→ `{ { a, b }, c }`
-
-```
 a{ b c }
+→ { a, { b, c } }
 ```
-
-→ `{ a, { b, c } }`
 
 ---
 
 ## more examples
 
-```
+```text
 A: red apple, green pear
 B: green pear, banana
 
 $$A | $$B
-{ red apple, banana }
+→ { red apple, banana }
 
 Y: { a b }{ c d }
-
-Y = { { a, b }, { c, d } }
+→ { { a, b }, { c, d } }
 ```
 
 ---
@@ -233,13 +278,15 @@ Y = { { a, b }, { c, d } }
 
 ### canonical sets
 
-```
+```text
 A: a b
 B: b a
 C: $A $B
 ```
 
-```
+→
+
+```text
 A = { a, b }
 B = { a, b }
 C = { { a, b } }
@@ -254,18 +301,6 @@ C = { { a, b } }
 * right-associative behavior
 * use `{ ... }` for grouping
 
-Example:
-
-```
-a b - b - c
-```
-
-is:
-
-```
-a b - (b - c)
-```
-
 ---
 
 ## notes
@@ -275,6 +310,5 @@ a b - (b - c)
 * elements can be strings or sets
 * `$` vs `$$` is explicit by design
 * product encodes ordered pairs using nested sets
-* output switches between inline and multiline automatically (~80 char width)
 * named sets print on empty input
 * named sets are displayed as `name = value`
