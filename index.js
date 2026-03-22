@@ -4,7 +4,7 @@ const setToString = require("./lib/set-to-string");
 const completer = require("./lib/completer");
 const cartesianProduct = require("./lib/cartesian-product");
 const printSets = require("./lib/print-sets");
-
+const { load, save } = require("./lib/persistence");
 function isWrapped(expression) {
   expression = expression.trim();
   if (!expression.startsWith("{") || !expression.endsWith("}")) {
@@ -214,10 +214,12 @@ function online(line) {
           console.log(setToString(evaluate(line)));
         }
       }
+      save();
     }
   } catch (error) {
     console.log("Error: " + error.message);
   }
 }
 
+load();
 require("./lib/rl")("\x1b[36m{}\x1b[0m ", online, completer);
