@@ -451,7 +451,7 @@ Y = { { a, b }, { c, d } }
 ---
 
 ## notes
-
+* tab completion is supported
 * plain identifiers (like `A`) are literal atoms
 * use `$$A` for elements
 * use `$A` for the set as one element
