@@ -20,7 +20,7 @@ fabric is a small language for set algebra.
 Run:
 
 ```bash
-node fabric.js
+node fabric
 ```
 
 You’ll see:
