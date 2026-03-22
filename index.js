@@ -1,37 +1,9 @@
-const sets = Object.create(null);
-const canonSets = {};
-
-function getSet(set) {
-  let canon = setToString(set);
-  if (canon in canonSets) {
-    return canonSets[canon];
-  } else {
-    canonSets[canon] = set;
-    return set;
-  }
-}
-
-function setToString(set) {
-  let elements = [];
-  for (let element of set) {
-    if (element instanceof Set) {
-      elements.push(setToString(element));
-    } else {
-      elements.push(element);
-    }
-  }
-  return "{ " + elements.sort().join(", ") + " }";
-}
-
-function cartesianProduct(left, right) {
-  let result = [];
-  for (let a of left) {
-    for (let b of right) {
-      result.push(getSet(new Set([a, b])));
-    }
-  }
-  return getSet(new Set(result));
-}
+const sets = require("./lib/sets");
+const getSet = require("./lib/get-set");
+const setToString = require("./lib/set-to-string");
+const completer = require("./lib/completer");
+const cartesianProduct = require("./lib/cartesian-product");
+const printSets = require("./lib/print-sets");
 
 function isWrapped(expression) {
   expression = expression.trim();
@@ -226,12 +198,6 @@ function getAssignment(line) {
   }
 }
 
-function printSets() {
-  for (let name of Object.keys(sets).sort()) {
-    console.log(name + " = " + setToString(sets[name]));
-  }
-}
-
 function online(line) {
   try {
     if (!line) {
@@ -252,110 +218,6 @@ function online(line) {
   } catch (error) {
     console.log("Error: " + error.message);
   }
-}
-
-function getAtoms() {
-  let atoms = new Set();
-
-  function walk(set) {
-    for (let element of set) {
-      if (element instanceof Set) {
-        walk(element);
-      } else {
-        atoms.add(element);
-      }
-    }
-  }
-
-  for (let name of Object.keys(sets)) {
-    walk(sets[name]);
-  }
-
-  return [...atoms].sort();
-}
-
-function getTopLevelCommaMode(line) {
-  let depth = 0;
-
-  for (let char of line) {
-    if (char == "{") {
-      depth++;
-    } else if (char == "}") {
-      depth--;
-    } else if (char == "," && depth == 0) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-function getCurrentChunk(line) {
-  let commaMode = getTopLevelCommaMode(line);
-  let depth = 0;
-
-  for (let i = line.length - 1; i >= 0; i--) {
-    let char = line[i];
-
-    if (char == "}") {
-      if (depth == 0) {
-        return line.slice(i + 1);
-      }
-      depth++;
-    } else if (char == "{") {
-      depth--;
-      if (depth < 0) {
-        return line.slice(i + 1);
-      }
-    } else if (depth == 0) {
-      if (commaMode) {
-        if (char == ",") {
-          return line.slice(i + 1);
-        }
-      } else {
-        if (/\s/.test(char)) {
-          return line.slice(i + 1);
-        }
-      }
-    }
-  }
-
-  return line;
-}
-
-function completer(line) {
-  let setNames = Object.keys(sets).sort();
-  let atoms = getAtoms();
-
-  let chunk = getCurrentChunk(line);
-  let trimmed = chunk.trimStart();
-  let leading = chunk.slice(0, chunk.length - trimmed.length);
-
-  let prefix = trimmed;
-  let base = "";
-  let options = [];
-
-  if (trimmed.startsWith("$$")) {
-    base = "$$";
-    prefix = trimmed.slice(2);
-    options = setNames;
-  } else if (trimmed.startsWith("$")) {
-    base = "$";
-    prefix = trimmed.slice(1);
-    options = setNames;
-  } else if (line.trimStart().startsWith("!") && line.trim() == trimmed) {
-    base = "!";
-    prefix = trimmed.slice(1);
-    options = setNames;
-  } else {
-    options = atoms;
-  }
-
-  let matches = options
-    .filter((option) => option.startsWith(prefix))
-    .map((option) => leading + base + option);
-
-  return [matches, chunk];
 }
 
 require("./lib/rl")("\x1b[36m{}\x1b[0m ", online, completer);
