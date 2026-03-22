@@ -22,41 +22,58 @@ A: a b c
 B: c d
 
 $$A + $$B
-{
-  a,
-  b,
-  c,
-  d
-}
+{ a, b, c, d }
 
 $$A & $$B
-{
-  c
-}
+{ c }
 
 C: { $$A + $$B } x
 
 <empty line>
 
-A = {
+A = { a, b, c }
+
+B = { c, d }
+
+C = { { a, b, c, d }, x }
+```
+
+Small sets stay on one line.
+
+---
+
+## formatting
+
+fabric formats sets automatically:
+
+* **inline** if the result fits within ~50 characters
+* **multiline** otherwise
+
+Example (small):
+
+```
+{ a, b, c }
+```
+
+Example (larger):
+
+```
+{
   a,
   b,
-  c
-}
-
-B = {
   c,
-  d
+  d,
+  e,
+  f
 }
+```
 
-C = {
-  {
-    a,
-    b,
-    c,
-    d
-  },
-  x
+Nested sets expand only when needed:
+
+```
+{
+  { a, b },
+  { c, d }
 }
 ```
 
@@ -78,18 +95,10 @@ Example:
 A: a b
 
 $A
-{
-  {
-    a,
-    b
-  }
-}
+{ { a, b } }
 
 $$A
-{
-  a,
-  b
-}
+{ a, b }
 ```
 
 ---
@@ -122,46 +131,14 @@ Example:
 a b * x y
 ```
 
-Result:
+Result (formatted automatically):
 
 ```
 {
-  {
-    {
-      a
-    },
-    {
-      a,
-      x
-    }
-  },
-  {
-    {
-      a
-    },
-    {
-      a,
-      y
-    }
-  },
-  {
-    {
-      b
-    },
-    {
-      b,
-      x
-    }
-  },
-  {
-    {
-      b
-    },
-    {
-      b,
-      y
-    }
-  }
+  { { a }, { a, x } },
+  { { a }, { a, y } },
+  { { b }, { b, x } },
+  { { b }, { b, y } }
 }
 ```
 
@@ -177,15 +154,15 @@ Braces do two things.
 
 ```
 X: { a b } c
-
-X = {
-  {
-    a,
-    b
-  },
-  c
-}
 ```
+
+Result:
+
+```
+X = { { a, b }, c }
+```
+
+---
 
 ### grouping
 
@@ -196,10 +173,7 @@ X = {
 Result:
 
 ```
-{
-  b,
-  c
-}
+{ b, c }
 ```
 
 ---
@@ -214,15 +188,9 @@ fabric has two modes.
 a b c
 ```
 
-→
+→ `{ a, b, c }`
 
-```
-{
-  a,
-  b,
-  c
-}
-```
+---
 
 ### comma mode (for multi-word atoms)
 
@@ -230,14 +198,9 @@ a b c
 red apple, green pear
 ```
 
-→
+→ `{ red apple, green pear }`
 
-```
-{
-  red apple,
-  green pear
-}
-```
+---
 
 ### braces also separate elements
 
@@ -245,33 +208,13 @@ red apple, green pear
 { a b }c
 ```
 
-→
-
-```
-{
-  {
-    a,
-    b
-  },
-  c
-}
-```
+→ `{ { a, b }, c }`
 
 ```
 a{ b c }
 ```
 
-→
-
-```
-{
-  a,
-  {
-    b,
-    c
-  }
-}
-```
+→ `{ a, { b, c } }`
 
 ---
 
@@ -282,23 +225,11 @@ A: red apple, green pear
 B: green pear, banana
 
 $$A | $$B
-{
-  red apple,
-  banana
-}
+{ red apple, banana }
 
 Y: { a b }{ c d }
 
-Y = {
-  {
-    a,
-    b
-  },
-  {
-    c,
-    d
-  }
-}
+Y = { { a, b }, { c, d } }
 ```
 
 ---
@@ -314,22 +245,11 @@ C: $A $B
 ```
 
 ```
-A = {
-  a,
-  b
-}
+A = { a, b }
 
-B = {
-  a,
-  b
-}
+B = { a, b }
 
-C = {
-  {
-    a,
-    b
-  }
-}
+C = { { a, b } }
 ```
 
 ---
@@ -361,6 +281,6 @@ a b - (b - c)
 * elements can be strings or sets
 * `$` vs `$$` is explicit by design
 * product encodes ordered pairs using nested sets
-* output is formatted as an indented tree
+* output switches between inline and multiline automatically
 * named sets print on empty input
 * named sets are displayed as `name = value`
