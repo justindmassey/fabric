@@ -10,7 +10,8 @@ It supports:
 
 * named sets
 * union, intersection, difference, symmetric difference, and product
-* nested sets
+* nested set literals
+* grouping with braces
 * canonicalized structural equality
 * set insertion vs set expansion
 
@@ -21,8 +22,7 @@ It supports:
 Run:
 
 ```bash
-cd fabric
-node .
+node fabric.js
 ```
 
 You’ll see:
@@ -69,7 +69,7 @@ Example:
 Any non-empty line without `:` or `!` is evaluated and printed:
 
 ```text
-$$A + $$B
+a b + b c
 ```
 
 ---
@@ -80,13 +80,88 @@ Press enter on an empty line.
 
 ---
 
-## elements
+## elements and splitting
 
-Elements are split by whitespace or commas:
+fabric has two splitting modes.
+
+### whitespace mode
+
+If an expression contains no commas at the current level, it is split by whitespace:
 
 ```text
 a b c
-a, b, c
+```
+
+means:
+
+```text
+{ a, b, c }
+```
+
+So:
+
+```text
+red apple green
+```
+
+means three atoms:
+
+* `red`
+* `apple`
+* `green`
+
+---
+
+### comma mode
+
+If an expression contains a comma at the current level, it is split by commas instead:
+
+```text
+red apple, green pear, banana
+```
+
+means:
+
+```text
+{ red apple, green pear, banana }
+```
+
+So in comma mode, spaces stay inside the atom.
+
+---
+
+### braces also separate elements
+
+Braces act as separators at the top level:
+
+```text
+{ a b }c
+```
+
+means:
+
+```text
+{ { a, b }, c }
+```
+
+```text
+a{ b c }
+```
+
+means:
+
+```text
+{ a, { b, c } }
+```
+
+```text
+{ a }{ b }
+```
+
+means:
+
+```text
+{ { a }, { b } }
 ```
 
 ---
@@ -114,6 +189,58 @@ B = { a, b, c }
 C = { { a, b } }
 ```
 
+Important:
+
+* `A` is the literal atom `A`
+* `$A` is the set `A` as one element
+* `$$A` is the elements of set `A`
+
+---
+
+## set literals and grouping
+
+Braces do two jobs.
+
+### set literal (inside expressions)
+
+Inside a larger expression, `{ ... }` creates a set value:
+
+```text
+X: { a b } c
+```
+
+Result:
+
+```text
+X = { { a, b }, c }
+```
+
+---
+
+### grouping (when wrapping the whole expression)
+
+If the whole expression is wrapped, braces act as grouping:
+
+```text
+{ a b + b c }
+```
+
+Result:
+
+```text
+{ a, b, c }
+```
+
+```text
+{ a b + b c } & b c
+```
+
+Result:
+
+```text
+{ b, c }
+```
+
 ---
 
 ## operators
@@ -128,10 +255,18 @@ C = { { a, b } }
 
 ---
 
+## operator examples (atoms)
+
 ### union
 
 ```text
-$$A + $$B
+a b + b c
+```
+
+→
+
+```text
+{ a, b, c }
 ```
 
 ---
@@ -139,7 +274,13 @@ $$A + $$B
 ### intersection
 
 ```text
-$$A & $$B
+a b & b c
+```
+
+→
+
+```text
+{ b }
 ```
 
 ---
@@ -147,7 +288,13 @@ $$A & $$B
 ### difference
 
 ```text
-$$A - $$B
+a b c - b c
+```
+
+→
+
+```text
+{ a }
 ```
 
 ---
@@ -155,36 +302,54 @@ $$A - $$B
 ### symmetric difference
 
 ```text
-$$A | $$B
+a b c | b c d
 ```
 
-Elements in either set, but not both.
+→
+
+```text
+{ a, d }
+```
 
 ---
 
 ### cartesian product
 
 ```text
-$$A * $$B
+a b * x y
 ```
 
-Example:
-
-```text
-A: a b
-B: x y
-
-$$A * $$B
-```
-
-Result:
+→
 
 ```text
 { { a, x }, { a, y }, { b, x }, { b, y } }
 ```
 
-Note: pairs are unordered sets, not tuples.
-`{ a, x }` is the same as `{ x, a }`.
+Note: pairs are unordered sets.
+
+---
+
+## named set examples
+
+```text
+A: a b c
+B: c d
+
+$$A + $$B
+{ a, b, c, d }
+
+$$A & $$B
+{ c }
+
+$$A - $$B
+{ a, b }
+
+$$A | $$B
+{ a, b, d }
+
+$$A * $$B
+{ { a, c }, { a, d }, { b, c }, { b, d }, { c, c }, { c, d } }
+```
 
 ---
 
@@ -192,15 +357,13 @@ Note: pairs are unordered sets, not tuples.
 
 ### canonical sets
 
-Sets are canonicalized by structure:
-
 ```text
 A: a b
 B: b a
 C: $A $B
 ```
 
-Result:
+→
 
 ```text
 A = { a, b }
@@ -213,14 +376,13 @@ C = { { a, b } }
 ### nested sets
 
 ```text
-A: a b
-B: $A
+X: { a b } { c d }
 ```
 
-Result:
+→
 
 ```text
-B = { { a, b } }
+X = { { a, b }, { c, d } }
 ```
 
 ---
@@ -241,33 +403,23 @@ $$A  → { a, b }
 ### parsing
 
 * recursive evaluation
-* no operator precedence
+* no precedence
 * right-associative
 
 ```text
-$$A - $$B - $$C
+a b - b - c
 ```
 
-is parsed as:
+→
 
 ```text
-$$A - ($$B - $$C)
+a b - (b - c)
 ```
 
----
-
-### reserved braces
-
-`{` and `}` are currently ignored and reserved for future syntax.
+Use braces for grouping:
 
 ```text
-A: { a b }
-```
-
-is the same as:
-
-```text
-A: a b
+{ a b - b } - c
 ```
 
 ---
@@ -275,33 +427,24 @@ A: a b
 ## example session
 
 ```text
-A: a b c
-B: c d
+A: red apple, green pear
+B: green pear, banana
 
 $$A + $$B
-{ a, b, c, d }
+{ banana, green pear, red apple }
 
 $$A & $$B
-{ c }
+{ green pear }
 
-$$A - $$B
-{ a, b }
-
-$$A | $$B
-{ a, b, d }
-
-C: $$A $$B
-D: $A $B
-
-$$A * $$B
-{ { a, c }, { a, d }, { b, c }, { b, d }, { c, c }, { c, d } }
+X: { $$A + $$B } kiwi
+Y: { a b }{ c d }
 
 <empty line>
 
-A = { a, b, c }
-B = { c, d }
-C = { a, b, c, d }
-D = { { a, b, c }, { c, d } }
+A = { green pear, red apple }
+B = { banana, green pear }
+X = { kiwi, { banana, green pear, red apple } }
+Y = { { a, b }, { c, d } }
 ```
 
 ---
@@ -309,13 +452,12 @@ D = { { a, b, c }, { c, d } }
 ## notes
 
 * plain identifiers (like `A`) are literal atoms
-* use `$$A` to work with elements of a set
-* use `$A` to insert a set as a single element
-* elements are strings or sets
+* use `$$A` for elements
+* use `$A` for the set as one element
+* elements can be strings or sets
 * undefined set references are ignored
 * empty elements are ignored
 * product creates pair-sets
-* braces are reserved but not yet meaningful
 * named sets print only on empty input
 
 ---
