@@ -11,23 +11,182 @@ function getSet(set) {
   }
 }
 
-function split(expression) {
-  let elements;
-  if (expression.includes(",")) {
-    elements = expression.split(",");
-  } else {
-    elements = expression.split(/\s+/);
+function setToString(set) {
+  let elements = [];
+  for (let element of set) {
+    if (element instanceof Set) {
+      elements.push(setToString(element));
+    } else {
+      elements.push(element);
+    }
   }
-  return elements.map((element) => element.trim());
+  return "{ " + elements.sort().join(", ") + " }";
+}
+
+function cartesianProduct(left, right) {
+  let result = [];
+  for (let a of left) {
+    for (let b of right) {
+      result.push(getSet(new Set([a, b])));
+    }
+  }
+  return getSet(new Set(result));
+}
+
+function isWrapped(expression) {
+  expression = expression.trim();
+  if (!expression.startsWith("{") || !expression.endsWith("}")) {
+    return false;
+  }
+
+  let depth = 0;
+  for (let i = 0; i < expression.length; i++) {
+    let char = expression[i];
+
+    if (char == "{") {
+      depth++;
+    } else if (char == "}") {
+      depth--;
+      if (depth == 0 && i < expression.length - 1) {
+        return false;
+      }
+    }
+
+    if (depth < 0) {
+      throw new Error("unmatched }");
+    }
+  }
+
+  if (depth != 0) {
+    throw new Error("unmatched {");
+  }
+
+  return true;
+}
+
+function findTopLevelOperator(expression) {
+  let depth = 0;
+
+  for (let i = 0; i < expression.length; i++) {
+    let char = expression[i];
+
+    if (char == "{") {
+      depth++;
+    } else if (char == "}") {
+      depth--;
+      if (depth < 0) {
+        throw new Error("unmatched }");
+      }
+    } else if (depth == 0 && "+-&|*".includes(char)) {
+      return i;
+    }
+  }
+
+  if (depth != 0) {
+    throw new Error("unmatched {");
+  }
+}
+
+function splitTopLevel(expression) {
+  let commaMode = false;
+  let depth = 0;
+
+  for (let char of expression) {
+    if (char == "{") {
+      depth++;
+    } else if (char == "}") {
+      depth--;
+      if (depth < 0) {
+        throw new Error("unmatched }");
+      }
+    } else if (char == "," && depth == 0) {
+      commaMode = true;
+      break;
+    }
+  }
+
+  if (depth != 0) {
+    throw new Error("unmatched {");
+  }
+
+  let elements = [];
+  let current = "";
+  depth = 0;
+
+  for (let char of expression) {
+    if (char == "{") {
+      depth++;
+      current += char;
+    } else if (char == "}") {
+      depth--;
+      if (depth < 0) {
+        throw new Error("unmatched }");
+      }
+      current += char;
+    } else if (commaMode && depth == 0 && char == ",") {
+      elements.push(current.trim());
+      current = "";
+    } else if (!commaMode && depth == 0 && /\s/.test(char)) {
+      if (current.trim()) {
+        elements.push(current.trim());
+        current = "";
+      }
+    } else {
+      current += char;
+    }
+  }
+
+  if (depth != 0) {
+    throw new Error("unmatched {");
+  }
+
+  if (current.trim()) {
+    elements.push(current.trim());
+  }
+
+  return elements;
+}
+
+function evaluateElements(expression) {
+  let result = [];
+
+  for (let element of splitTopLevel(expression)) {
+    if (element.startsWith("$$")) {
+      let set = sets[element.slice(2)];
+      if (set) {
+        for (let elem of set) {
+          result.push(elem);
+        }
+      }
+    } else if (element.startsWith("$")) {
+      result.push(sets[element.slice(1)]);
+    } else if (isWrapped(element)) {
+      result.push(evaluate(element));
+    } else {
+      result.push(element);
+    }
+  }
+
+  return getSet(new Set(result.filter(Boolean)));
 }
 
 function evaluate(expression) {
-  expression = expression.replaceAll("{", " ").replaceAll("}", " ");
-  let operation = expression.match(/^(.*?)\s*([+\-&|*])\s*(.*)$/);
-  if (operation) {
-    let left = evaluate(operation[1]);
-    let operator = operation[2];
-    let right = evaluate(operation[3]);
+  expression = expression.trim();
+
+  if (!expression) {
+    return getSet(new Set());
+  }
+
+  if (isWrapped(expression)) {
+    return evaluate(expression.slice(1, -1));
+  }
+
+  let index = findTopLevelOperator(expression);
+  if (index != null) {
+    let left = evaluate(expression.slice(0, index));
+    let operator = expression[index];
+    let right = evaluate(expression.slice(index + 1));
+
     if (operator == "+") {
       return getSet(left.union(right));
     }
@@ -43,35 +202,9 @@ function evaluate(expression) {
     if (operator == "*") {
       return cartesianProduct(left, right);
     }
-  } else {
-    let elements = split(expression);
-    let result = [];
-    for (let element of elements) {
-      if (element.startsWith("$$")) {
-        let set = sets[element.slice(2)];
-        if (set) {
-          for (let elem of set) {
-            result.push(elem);
-          }
-        }
-      } else if (element.startsWith("$")) {
-        result.push(sets[element.slice(1)]);
-      } else {
-        result.push(element);
-      }
-    }
-    return getSet(new Set(result.filter(Boolean)));
   }
-}
 
-function cartesianProduct(left, right) {
-  let result = [];
-  for (let a of left) {
-    for (let b of right) {
-      result.push(getSet(new Set([a, b])));
-    }
-  }
-  return getSet(new Set(result));
+  return evaluateElements(expression);
 }
 
 function getAssignment(line) {
@@ -87,39 +220,31 @@ function getAssignment(line) {
   }
 }
 
-function online(line) {
-  if (!line) {
-    printSets();
-  } else {
-    let removal = line.match(/^!(.*)/);
-    if (removal) {
-      delete sets[removal[1].trim()];
-    } else {
-      let assignment = getAssignment(line);
-      if (assignment) {
-        sets[assignment.name] = evaluate(assignment.expression);
-      } else {
-        console.log(setToString(evaluate(line)));
-      }
-    }
-  }
-}
-
-function setToString(set) {
-  let elements = [];
-  for (let element of set) {
-    if (element instanceof Set) {
-      elements.push(setToString(element));
-    } else {
-      elements.push(element);
-    }
-  }
-  return "{ " + elements.sort().join(", ") + " }";
-}
-
 function printSets() {
   for (let name of Object.keys(sets).sort()) {
     console.log(name + " = " + setToString(sets[name]));
+  }
+}
+
+function online(line) {
+  try {
+    if (!line) {
+      printSets();
+    } else {
+      let removal = line.match(/^!(.*)/);
+      if (removal) {
+        delete sets[removal[1].trim()];
+      } else {
+        let assignment = getAssignment(line);
+        if (assignment) {
+          sets[assignment.name] = evaluate(assignment.expression);
+        } else {
+          console.log(setToString(evaluate(line)));
+        }
+      }
+    }
+  } catch (error) {
+    console.log("Error: " + error.message);
   }
 }
 
