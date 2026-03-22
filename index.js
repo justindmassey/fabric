@@ -113,8 +113,18 @@ function splitTopLevel(expression) {
   let current = "";
   depth = 0;
 
+  function pushCurrent() {
+    if (current.trim()) {
+      elements.push(current.trim());
+      current = "";
+    }
+  }
+
   for (let char of expression) {
     if (char == "{") {
+      if (depth == 0) {
+        pushCurrent();
+      }
       depth++;
       current += char;
     } else if (char == "}") {
@@ -123,14 +133,13 @@ function splitTopLevel(expression) {
         throw new Error("unmatched }");
       }
       current += char;
-    } else if (commaMode && depth == 0 && char == ",") {
-      elements.push(current.trim());
-      current = "";
-    } else if (!commaMode && depth == 0 && /\s/.test(char)) {
-      if (current.trim()) {
-        elements.push(current.trim());
-        current = "";
+      if (depth == 0) {
+        pushCurrent();
       }
+    } else if (commaMode && depth == 0 && char == ",") {
+      pushCurrent();
+    } else if (!commaMode && depth == 0 && /\s/.test(char)) {
+      pushCurrent();
     } else {
       current += char;
     }
@@ -140,10 +149,7 @@ function splitTopLevel(expression) {
     throw new Error("unmatched {");
   }
 
-  if (current.trim()) {
-    elements.push(current.trim());
-  }
-
+  pushCurrent();
   return elements;
 }
 
