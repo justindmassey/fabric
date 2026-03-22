@@ -36,16 +36,28 @@ $$A & $$B
 
 C: { $$A + $$B } x
 
-C:
+<empty line>
+
+A = {
+  a,
+  b,
+  c
+}
+
+B = {
+  c,
+  d
+}
+
+C = {
   {
-    {
-      a,
-      b,
-      c,
-      d
-    },
-    x
-  }
+    a,
+    b,
+    c,
+    d
+  },
+  x
+}
 ```
 
 ---
@@ -92,29 +104,68 @@ $$A
 *   product
 ```
 
+---
+
+## cartesian product
+
+The product operator `*` produces **ordered pairs encoded as sets**.
+
+Each pair `(a, b)` is represented as:
+
+```
+{ { a }, { a, b } }
+```
+
 Example:
 
 ```
 a b * x y
+```
+
+Result:
+
+```
 {
   {
-    a,
-    x
+    {
+      a
+    },
+    {
+      a,
+      x
+    }
   },
   {
-    a,
-    y
+    {
+      a
+    },
+    {
+      a,
+      y
+    }
   },
   {
-    b,
-    x
+    {
+      b
+    },
+    {
+      b,
+      x
+    }
   },
   {
-    b,
-    y
+    {
+      b
+    },
+    {
+      b,
+      y
+    }
   }
 }
 ```
+
+This encoding preserves order using only sets.
 
 ---
 
@@ -127,21 +178,24 @@ Braces do two things.
 ```
 X: { a b } c
 
-X:
+X = {
   {
-    {
-      a,
-      b
-    },
-    c
-  }
+    a,
+    b
+  },
+  c
+}
 ```
 
 ### grouping
 
 ```
 { a b + b c } & b c
+```
 
+Result:
+
+```
 {
   b,
   c
@@ -235,17 +289,16 @@ $$A | $$B
 
 Y: { a b }{ c d }
 
-Y:
+Y = {
   {
-    {
-      a,
-      b
-    },
-    {
-      c,
-      d
-    }
+    a,
+    b
+  },
+  {
+    c,
+    d
   }
+}
 ```
 
 ---
@@ -261,25 +314,22 @@ C: $A $B
 ```
 
 ```
-A:
+A = {
+  a,
+  b
+}
+
+B = {
+  a,
+  b
+}
+
+C = {
   {
     a,
     b
   }
-
-B:
-  {
-    a,
-    b
-  }
-
-C:
-  {
-    {
-      a,
-      b
-    }
-  }
+}
 ```
 
 ---
@@ -310,14 +360,7 @@ a b - (b - c)
 * sets are canonical (order does not matter)
 * elements can be strings or sets
 * `$` vs `$$` is explicit by design
-* product creates unordered pairs
+* product encodes ordered pairs using nested sets
 * output is formatted as an indented tree
 * named sets print on empty input
-
----
-
-## why
-
-Small language.
-Immediate feedback.
-Just sets.
+* named sets are displayed as `name = value`
