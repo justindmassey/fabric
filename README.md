@@ -32,13 +32,9 @@ C: { $$A + $$B } x
 <empty line>
 
 A = { a, b, c }
-
 B = { c, d }
-
 C = { { a, b, c, d }, x }
 ```
-
-Small sets stay on one line.
 
 ---
 
@@ -46,7 +42,7 @@ Small sets stay on one line.
 
 fabric formats sets automatically:
 
-* **inline** if the result fits within ~50 characters
+* **inline** if the result fits within ~80 characters
 * **multiline** otherwise
 
 Example (small):
@@ -64,17 +60,16 @@ Example (larger):
   c,
   d,
   e,
-  f
+  f,
+  g,
+  h
 }
 ```
 
 Nested sets expand only when needed:
 
 ```
-{
-  { a, b },
-  { c, d }
-}
+{ { a, b }, { c, d } }
 ```
 
 ---
@@ -131,7 +126,7 @@ Example:
 a b * x y
 ```
 
-Result (formatted automatically):
+Result:
 
 ```
 {
@@ -246,9 +241,7 @@ C: $A $B
 
 ```
 A = { a, b }
-
 B = { a, b }
-
 C = { { a, b } }
 ```
 
@@ -277,10 +270,11 @@ a b - (b - c)
 
 ## notes
 
+* tab completion is supported
 * sets are canonical (order does not matter)
 * elements can be strings or sets
 * `$` vs `$$` is explicit by design
 * product encodes ordered pairs using nested sets
-* output switches between inline and multiline automatically
+* output switches between inline and multiline automatically (~80 char width)
 * named sets print on empty input
 * named sets are displayed as `name = value`
