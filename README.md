@@ -22,7 +22,8 @@ It supports:
 Run:
 
 ```bash
-node fabric.js
+cd fabric
+node .
 ```
 
 You’ll see:
